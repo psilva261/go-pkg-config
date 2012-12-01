@@ -11,6 +11,9 @@ Inside your ~/.profile add:
 	export PATH=$APPS/bin:$PATH
 	export DYLD_LIBRARY_PATH=$APPS/lib
 	export C_INCLUDE_PATH=$APPS/include
+
+Build go-pkg-config:
+
 	go build -o pkg-config main.go
 	cp pkg-config $APPS/bin
 
