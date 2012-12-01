@@ -26,18 +26,9 @@ import (
 )
 
 var (
-	ErrNotFound = errors.New("pc file could not be found")
+	ErrNotFound     = errors.New("pc file could not be found")
 	PKG_CONFIG_PATH = os.Getenv("PKG_CONFIG_PATH")
 )
-
-type PC struct {
-	prefix      string
-	exec_prefix string
-	libdir      string
-	include_dir string
-	Cflags      string
-	Libs        string
-}
 
 func parseConfig(filename string) (cfg map[string]string, err error) {
 	f, err := os.Open(filename)
@@ -57,7 +48,7 @@ func parseConfig(filename string) (cfg map[string]string, err error) {
 			return nil, err
 		}
 		l := string(lb)
-		if l == "" || l[0:1] == "#" {
+		if l == "" || strings.HasPrefix(l, "#") {
 			continue
 		}
 
@@ -66,20 +57,28 @@ func parseConfig(filename string) (cfg map[string]string, err error) {
 		}
 		if prelude {
 			sl := strings.Split(l, "=")
-			name    := sl[0]
+			if len(sl) < 2 {
+				continue
+			}
+			name := sl[0]
 			content := sl[1]
-			from    := strings.Index(content, "${")
-			to      := strings.Index(content, "}")
+			from := strings.Index(content, "${")
+			to := strings.Index(content, "}")
 			if from >= 0 && to >= 0 {
 				a := content[:from]
-				b := vars[content[from+2:to]]
-				c := content[to+1:]
-				vars[name] = a + b + c
+				if from+2 < to {
+					b := vars[content[from+2:to]]
+					c := content[to+1:]
+					vars[name] = a + b + c
+				}
 			} else {
 				vars[name] = content
 			}
 		} else {
 			sl := strings.Split(l, ": ")
+			if len(sl) < 2 {
+				continue
+			}
 			name := sl[0]
 			content := sl[1]
 			from := strings.Index(content, "${")
@@ -97,7 +96,7 @@ func parseConfig(filename string) (cfg map[string]string, err error) {
 func locatePC(name string) (fullPath string, err error) {
 	configPaths := strings.Split(PKG_CONFIG_PATH, ":")
 	for _, p := range configPaths {
-		fullPath, err = find(p, name + ".pc")
+		fullPath, err = find(p, name+".pc")
 		if err == nil {
 			return
 		}
@@ -119,7 +118,7 @@ func find(path string, filename string) (targetPath string, err error) {
 		if fi.Name() == filename {
 			return path + "/" + filename, nil
 		} else if fi.IsDir() {
-			targetPath, err = find(path + "/" + fi.Name(), filename)
+			targetPath, err = find(path+"/"+fi.Name(), filename)
 			if err == nil {
 				return
 			}

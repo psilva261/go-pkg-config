@@ -15,7 +15,7 @@ Inside your ~/.profile add:
 Build go-pkg-config:
 
 	go build -o pkg-config main.go
-	cp pkg-config $APPS/bin
+	cp pkg-config $HOME/Apps/bin
 
 Now when installing some software that uses pkg-config, just use $HOME/Apps as prefix:
 
